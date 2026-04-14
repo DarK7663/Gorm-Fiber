@@ -10,12 +10,12 @@ import (
 
 type UpdateTask struct {
 	Title string    `json:"title"`
-	Date  time.Time `json:"date"`
+	Time  time.Time `json:"date"`
 }
 
 type CreateTask struct {
 	Title string    `json:"title"`
-	Time  int64     `json:"time"`
+	Time  time.Time `json:"time"`
 	Date  time.Time `json:"date"`
 }
 
@@ -32,7 +32,7 @@ func main() {
 		data, err := repo.GetAllTasks()
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": err,
+				"error": err.Error(),
 			})
 		}
 		return c.JSON(fiber.Map{
@@ -48,7 +48,6 @@ func main() {
 				"error": err.Error(),
 			})
 		}
-
 		data, err := repo.GetTaskById(uint(id))
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -58,7 +57,6 @@ func main() {
 		return c.JSON(fiber.Map{
 			"data": data,
 		})
-
 	})
 
 	app.Patch("/tasks/:id", func(c fiber.Ctx) error {
@@ -70,27 +68,27 @@ func main() {
 			})
 		}
 		data := new(UpdateTask)
-
 		if err := c.Bind().Body(&data); err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"error": err.Error(),
 			})
 		}
-		if err := repo.UpdateTask(uint(id), data.Title, data.Date); err != nil {
+		if err := repo.UpdateTask(uint(id), data.Title); err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"error": err.Error(),
 			})
 		}
 		return c.Status(fiber.StatusNoContent).Send(nil)
 	})
+
 	app.Post("/tasks", func(c fiber.Ctx) error {
 		data := new(CreateTask)
-
 		if err := c.Bind().Body(&data); err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"error": err.Error(),
 			})
 		}
+
 		task, err := repo.CreateTask(data.Title, data.Time, data.Date)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -110,7 +108,6 @@ func main() {
 				"error": err.Error(),
 			})
 		}
-
 		if err := repo.DeleteTask(uint(id)); err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"error": err.Error(),
@@ -118,5 +115,6 @@ func main() {
 		}
 		return c.Status(fiber.StatusNoContent).Send(nil)
 	})
+
 	app.Listen("127.0.0.1:8080")
 }
