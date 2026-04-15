@@ -14,9 +14,8 @@ type UpdateTask struct {
 }
 
 type CreateTask struct {
-	Title string    `json:"title"`
-	Time  time.Time `json:"time"`
-	Date  time.Time `json:"date"`
+	Title    string    `json:"title"`
+	DeadLine time.Time `json:"deadline"`
 }
 
 func main() {
@@ -25,7 +24,8 @@ func main() {
 	repo := NewTaskRepository(db)
 
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: []string{"*"},
+		AllowOrigins: []string{"http://127.0.0.1:5500"},
+		AllowMethods: []string{"GET", "POST", "HEAD", "PUT", "DELETE", "PATCH"},
 	}))
 
 	app.Get("/tasks", func(c fiber.Ctx) error {
@@ -82,14 +82,18 @@ func main() {
 	})
 
 	app.Post("/tasks", func(c fiber.Ctx) error {
-		data := new(CreateTask)
+		var data CreateTask
+
 		if err := c.Bind().Body(&data); err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"error": err.Error(),
 			})
 		}
 
-		task, err := repo.CreateTask(data.Title, data.Time, data.Date)
+		loc, _ := time.LoadLocation("Europe/Moscow")
+		data.DeadLine = data.DeadLine.In(loc)
+
+		task, err := repo.CreateTask(data.Title, data.DeadLine)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"error": err.Error(),

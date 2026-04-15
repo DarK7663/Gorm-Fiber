@@ -30,12 +30,8 @@ func (r *TaskRepository) GetAllTasks() ([]Task, error) {
 	return tasks, nil
 }
 
-func (r *TaskRepository) CreateTask(title string, t time.Time, date time.Time) (*Task, error) {
-	t, err := time.Parse(time.RFC3339, "2024-03-28")
-	if err != nil {
-
-	}
-	task := &Task{Title: title, Time: t.UTC(), Date: date}
+func (r *TaskRepository) CreateTask(title string, deadLine time.Time) (*Task, error) {
+	task := &Task{Title: title, Date: deadLine}
 	if err := r.db.Create(task).Error; err != nil {
 		return nil, err
 	}
